@@ -1,0 +1,47 @@
+{
+	"name": "sarina",
+	"version": "1.0.0",
+	"description":
+		"Sarina is a minimal and flexible NodeJs framework that lets you write modern, fast and easy use applications.",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/SarinaJs/Sarina"
+	},
+	"author": "SarinaJs",
+	"license": "MIT",
+	"keywords": ["nodejs", "javascirpt", "framework", "modular", "di"],
+	"contributors": ["Mohammad Parvareshi Hamrah <javadparvaresh@gmail.com>"],
+	"homepage": "https://sarinajs.github.io/",
+	"bugs": {
+		"email": "issues@sarinajs.com",
+		"url": "https://github.com/SarinaJs/Sarina/issues"
+	},
+	"engines": {
+		"node": "^8.0.0",
+		"npm": "^5.0.0"
+	},
+	"main": "public_api.js",
+	"types": "index.d.ts",
+	"files": ["lib", "src", "tests"],
+	"dependencies": {
+		"npm": "^5.8.0",
+		"reflect-metadata": "^0.1.12"
+	},
+	"devDependencies": {
+		"@types/chai": "latest",
+		"@types/mocha": "latest",
+		"@types/node": "latest",
+		"chai": "latest",
+		"chai-spies": "latest",
+		"karma-typescript": "^3.0.12",
+		"mocha": "latest",
+		"ts-node": "latest",
+		"tslint": "latest",
+		"typescript": "latest"
+	},
+	"scripts": {
+		"tsc": "./node_modules/typescript/bin/tsc",
+		"build": "tsc",
+		"test": "mocha --compilers ts:ts-node/register -R spec test/test.spec.ts"
+	}
+}
