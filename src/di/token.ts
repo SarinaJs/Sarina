@@ -1,8 +1,8 @@
 import { Type } from "./../type";
-export class ProviderToken {
+export class StaticToken {
 	public description?: string;
 	public multiple?: boolean;
-	public constructor(options: { description?: string; multiple?: boolean }) {
+	public constructor(options?: { description?: string; multiple?: boolean }) {
 		this.description = !options ? "" : options.description;
 		this.multiple = !options ? false : options.multiple;
 	}
@@ -17,4 +17,4 @@ export class ProviderToken {
 	};
 }
 
-export type Token = ProviderToken | Type<any>;
+export type Token = StaticToken | Type<any>;

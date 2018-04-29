@@ -1,4 +1,4 @@
-# Logs
+Logs
 logs
 *.log
 npm-debug.log*
@@ -36,7 +36,7 @@ build/Release
 node_modules/
 jspm_packages/
 
-# Typescript v1 declaration files
+# TypeScript v1 declaration files
 typings/
 
 # Optional npm cache directory
@@ -57,4 +57,11 @@ typings/
 # dotenv environment variables file
 .env
 
-_src
+# next.js build output
+.next
+
+#npm package-lock
+package-lock.json
+
+# Output
+lib

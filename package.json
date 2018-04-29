@@ -7,7 +7,7 @@
     "type": "git",
     "url": "https://github.com/SarinaJs/Sarina"
   },
-  "author": "SarinaJs",
+  "author": "Mohammad Parvareshi Hamrah",
   "license": "MIT",
   "keywords": ["nodejs", "javascirpt", "framework", "modular", "di"],
   "contributors": ["Mohammad Parvareshi Hamrah <javadparvaresh@gmail.com>"],
@@ -20,21 +20,15 @@
     "node": "^8.0.0",
     "npm": "^5.0.0"
   },
-  "main": "public_api.js",
+  "main": "lib/index.js",
   "types": "index.d.ts",
-  "files": ["lib", "src", "tests"],
+  "files": ["lib"],
   "dependencies": {
-    "npm": "^5.8.0",
-    "reflect-metadata": "^0.1.12"
+    "reflect-metadata": "latest"
   },
   "devDependencies": {
-    "@types/chai": "latest",
-    "@types/mocha": "latest",
+    "npm": "latest",
     "@types/node": "latest",
-    "chai": "latest",
-    "chai-spies": "latest",
-    "karma-typescript": "^3.0.12",
-    "mocha": "latest",
     "ts-node": "latest",
     "tslint": "latest",
     "typescript": "latest"

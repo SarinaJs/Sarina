@@ -1,9 +1,9 @@
 import { Type } from "./type";
 import { TypeDecorator, makeTypeDecoratorFactory } from "./metadata/decorators";
 import { Provider, ProviderDecoratorFactory } from "./di/provider";
-import { ProviderToken } from "./di/token";
+import { StaticToken } from "./di/token";
 
-export const BOOTABLE_PROVIDER_TOKEN = new ProviderToken({
+export const BOOTABLE_PROVIDER_TOKEN = new StaticToken({
 	description: "Bootable provider token",
 	multiple: true
 });

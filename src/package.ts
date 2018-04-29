@@ -1,5 +1,5 @@
 import { Type } from "./type";
-import { ProviderToken } from "./di/token";
+import { StaticToken } from "./di/token";
 import { Provider, ProviderDecoratorFactory } from "./di/provider";
 import {
 	TypeDecorator,
@@ -10,7 +10,7 @@ import {
 } from "./metadata/decorators";
 
 // The package provider token
-export const PACKAGE_PROVIDER_TOKEN: ProviderToken = new ProviderToken({
+export const PACKAGE_PROVIDER_TOKEN: StaticToken = new StaticToken({
 	description: "Package provider token",
 	multiple: true
 });

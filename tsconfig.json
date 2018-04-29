@@ -1,15 +1,15 @@
 {
-	"compilerOptions": {
-		"module": "commonjs",
-		"target": "ES6",
-		"outDir": "lib",
-		"declaration": true,
-		"sourceMap": true,
-		"experimentalDecorators": true,
-		"emitDecoratorMetadata": true,
-		"typeRoots": ["node_modules/@types"]
-	},
-	"include": ["src/**/*.ts"],
-	"exclude": ["src/**/*.spec.ts"],
-	"reflectionEnabled": true
+  "compilerOptions": {
+    "module": "commonjs",
+    "target": "ES6",
+    "outDir": "lib",
+    "declaration": true,
+    "sourceMap": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "skipLibCheck": true,
+    "typeRoots": ["node_modules/@types"]
+  },
+  "include": ["src/**/*.ts", "index.ts"],
+  "exclude": ["node_modules"]
 }

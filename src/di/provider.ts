@@ -1,12 +1,12 @@
 import { Type } from "./../type";
-import { ProviderToken } from "./token";
+import { StaticToken } from "./token";
 import {
-	TypeDecorator,
-	TypeDecoratorFactory,
-	makeTypeDecoratorFactory,
-	makeParamDecoratorFactory,
-	getMetadata,
-	setMetadata
+  TypeDecorator,
+  TypeDecoratorFactory,
+  makeTypeDecoratorFactory,
+  makeParamDecoratorFactory,
+  getMetadata,
+  setMetadata
 } from "./../metadata/decorators";
 import { RuntimeError, makeErrorFactory } from "./../error/error";
 
@@ -27,36 +27,36 @@ import { RuntimeError, makeErrorFactory } from "./../error/error";
 
 */
 export interface Dependency {
-	token: ProviderToken;
-	optional: boolean;
+  token: StaticToken;
+  optional: boolean;
 }
 
 export interface ProviderBase {
-	tokens: ProviderToken[];
+  tokens: StaticToken[];
 }
 export interface TypeProvider extends ProviderBase {
-	useType: Type<any>;
-	dependencies: Dependency[];
+  useType: Type<any>;
+  dependencies: Dependency[];
 }
 export interface ValueProvider extends ProviderBase {
-	useValue: any;
+  useValue: any;
 }
 export interface FactoryProvider extends ProviderBase {
-	useFactory: () => any;
-	dependencies: Dependency[];
+  useFactory: () => any;
+  dependencies: Dependency[];
 }
 export type Provider = TypeProvider | ValueProvider | FactoryProvider;
 
 // ERRORS
 export const InvalidUsageOfInjectAnnotation: (
-	target: Type<any>,
-	propertyKey: string | symbol
+  target: Type<any>,
+  propertyKey: string | symbol
 ) => RuntimeError = makeErrorFactory({
-	namespace: "sarina",
-	code: "di:invalid-inject-annotation-definition",
-	template: "'@Inject' annotation only is possible on constructor parameters.",
-	helpTemplate:
-		"You have used @Inject annoation on {1} for {0}. The @Inject annoation only allowed for constructor parameter and you can't use it for functions of class. To fix this error remove the @Inject annotation for {1} in {0}."
+  namespace: "sarina",
+  code: "di:invalid-inject-annotation-definition",
+  template: "'@Inject' annotation only is possible on constructor parameters.",
+  helpTemplate:
+    "You have used @Inject annoation on {1} for {0}. The @Inject annoation only allowed for constructor parameter and you can't use it for functions of class. To fix this error remove the @Inject annotation for {1} in {0}."
 });
 
 // THE PROVIDER META_KEY
@@ -64,110 +64,110 @@ const __PROVIDER_METADATA__ = "sarina::provider";
 const __PROVIDER_INJECT_METADATA__ = "sarina::provider::dependency";
 
 interface InjectMetadata {
-	index: number;
-	dependency: Dependency;
+  index: number;
+  dependency: Dependency;
 }
-export const InjectDecoratorFactory = (token: ProviderToken) => {
-	return function(
-		target: Type<any>,
-		propertyKey: string | symbol,
-		parameterIndex: number
-	) {
-		// only constructor parameter is allowed
-		if (propertyKey) {
-			throw InvalidUsageOfInjectAnnotation(target, propertyKey);
-		}
+export const InjectDecoratorFactory = (token: StaticToken) => {
+  return function(
+    target: Type<any>,
+    propertyKey: string | symbol,
+    parameterIndex: number
+  ) {
+    // only constructor parameter is allowed
+    if (propertyKey) {
+      throw InvalidUsageOfInjectAnnotation(target, propertyKey);
+    }
 
-		let deps = getMetadata<InjectMetadata[]>(
-			__PROVIDER_INJECT_METADATA__,
-			target,
-			[]
-		);
+    let deps = getMetadata<InjectMetadata[]>(
+      __PROVIDER_INJECT_METADATA__,
+      target,
+      []
+    );
 
-		let propertyDep: InjectMetadata = deps.find(
-			dep => dep.index === parameterIndex
-		);
-		if (!propertyDep) {
-			propertyDep = {
-				index: parameterIndex,
-				dependency: {
-					token: null,
-					optional: false
-				}
-			};
-			deps.push(propertyDep);
-		}
+    let propertyDep: InjectMetadata = deps.find(
+      dep => dep.index === parameterIndex
+    );
+    if (!propertyDep) {
+      propertyDep = {
+        index: parameterIndex,
+        dependency: {
+          token: null,
+          optional: false
+        }
+      };
+      deps.push(propertyDep);
+    }
 
-		propertyDep.dependency.token = token;
+    propertyDep.dependency.token = token;
 
-		setMetadata(__PROVIDER_INJECT_METADATA__, target, deps);
-	};
+    setMetadata(__PROVIDER_INJECT_METADATA__, target, deps);
+  };
 };
 
 // THE PROVIDER DECORATOR FACTORY
 export const ProviderDecoratorFactory = (provider?: {
-	tokens?: ProviderToken[];
+  tokens?: StaticToken[];
 }) => {
-	return function(target: Type<any>) {
-		// fetch all current providers metdata
-		let the_provider = getMetadata<TypeProvider>(
-			__PROVIDER_METADATA__,
-			target,
-			{
-				useType: target,
-				tokens: [],
-				dependencies: []
-			}
-		);
+  return function(target: Type<any>) {
+    // fetch all current providers metdata
+    let the_provider = getMetadata<TypeProvider>(
+      __PROVIDER_METADATA__,
+      target,
+      {
+        useType: target,
+        tokens: [],
+        dependencies: []
+      }
+    );
 
-		// add current provider to the list of tokens
-		if (the_provider.tokens.count(t => target === t) === 0) {
-			the_provider.tokens.push(target);
-		}
+    // add current provider to the list of tokens
+    if (the_provider.tokens.count(t => target === t) === 0) {
+      the_provider.tokens.push(target);
+    }
 
-		// add all tokens into final result
-		if (provider && provider.tokens)
-			the_provider.tokens.pushRange(provider.tokens);
+    // add all tokens into final result
+    if (provider && provider.tokens)
+      the_provider.tokens.pushRange(provider.tokens);
 
-		// fetch dependencies
-		const constructor_dependecnies = getMetadata(
-			"design:paramtypes",
-			target,
-			[]
-		);
-		const constructor_inject: InjectMetadata[] = getMetadata<any[]>(
-			__PROVIDER_INJECT_METADATA__,
-			target,
-			[]
-		);
-		the_provider.dependencies = constructor_dependecnies.map((cdep, index) => {
-			let dependency: Dependency = {
-				token: null,
-				optional: false
-			};
-			let inject = constructor_inject.find(inject => inject.index === index);
-			if (inject) {
-				dependency.token = inject.dependency.token || cdep;
-				dependency.optional = inject.dependency.optional || false;
-			} else {
-				dependency.token = cdep;
-			}
-			return dependency;
-		});
-		setMetadata(__PROVIDER_METADATA__, target, the_provider);
-	};
+    // fetch dependencies
+    const constructor_dependecnies = getMetadata(
+      "design:paramtypes",
+      target,
+      []
+    );
+    const constructor_inject: InjectMetadata[] = getMetadata<any[]>(
+      __PROVIDER_INJECT_METADATA__,
+      target,
+      []
+    );
+    the_provider.dependencies = constructor_dependecnies.map((cdep, index) => {
+      let dependency: Dependency = {
+        token: null,
+        optional: false
+      };
+      let inject = constructor_inject.find(inject => inject.index === index);
+      if (inject) {
+        dependency.token = inject.dependency.token || cdep;
+        dependency.optional = inject.dependency.optional || false;
+      } else {
+        dependency.token = cdep;
+      }
+      return dependency;
+    });
+    setMetadata(__PROVIDER_METADATA__, target, the_provider);
+  };
 };
 
 // The provider decorator factory
 export const Provider: (
-	provider?: { tokens?: ProviderToken[] }
+  provider?: { tokens?: StaticToken[] }
 ) => TypeDecorator = makeTypeDecoratorFactory([ProviderDecoratorFactory]);
 
 // The inject decorator factory
 // 		- The original inject factory
 export const Inject: (
-	token?: ProviderToken[]
+  token?: StaticToken
 ) => ParameterDecorator = makeParamDecoratorFactory([InjectDecoratorFactory]);
 
 export const getProvider = (type: Type<any>) =>
-	getMetadata<Provider>(__PROVIDER_METADATA__, type);
+  getMetadata<Provider>(__PROVIDER_METADATA__, type);
