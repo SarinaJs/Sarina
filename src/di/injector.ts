@@ -1,7 +1,8 @@
 import { Type, isType } from "./../type";
 import { makeErrorFactory, RuntimeError } from "./../error/error";
-import { Token, StaticToken } from "./token";
 import { generateId } from "./../util";
+import { loggerFactory, Logger } from "./../core-logger";
+import { Token, StaticToken } from "./token";
 import {
   Provider,
   TypeProvider,
@@ -60,63 +61,20 @@ interface TokenWrapper {
 }
 
 export class Injector {
-  public key: string = generateId();
+  public key: string = undefined;
   private providerWrappers: ProviderWrapper[] = [];
   private tokensWrappers: TokenWrapper[] = [];
-
-  // a debug util function
-  private debug(...args: any[]) {
-    args.unshift("sarina - Injector");
-    console.debug.apply(this, args);
-  }
-
-  // TODO : Remove this method then
-  private print(level: number = 0) {
-    let tabs = "";
-    for (let i = 0; i < level; i++) tabs += "\t";
-
-    let injector = this;
-    //////////////////////////////////////////////////////////
-
-    this.debug(tabs, `I> Injector ( ${injector.key} )`);
-
-    injector.providerWrappers.forEach(wrapper => {
-      let provider = wrapper.provider;
-      if ((provider as Object).hasOwnProperty("useType")) {
-        this.debug(
-          tabs,
-          `\t P> TypeProvider [ `,
-          (provider as TypeProvider).useType,
-          `]`
-        );
-      }
-      if ((provider as Object).hasOwnProperty("useValue")) {
-        this.debug(tabs, `\t P> ValueProvider [ Value ]`);
-      }
-      if ((provider as Object).hasOwnProperty("useFactory")) {
-        this.debug(tabs, `\t P> FactoryProvider [ Factory Function ]`);
-      }
-
-      provider.tokens.forEach(token => {
-        this.debug(
-          tabs,
-          "\t\t T> Token [ " +
-            (isType(token) ? token.name : token.toString()) +
-            " ]"
-        );
-      });
-      if ((provider as any).dependencies) {
-        (provider as any).dependencies.forEach((dep: any) => {
-          this.debug(tabs, `\t\t D> Dependency`, dep);
-        });
-      }
-    });
-    injector.dependencies.forEach(_injector => _injector.print(level + 1));
-    //////////////////////////////////////////////////////////
-  }
+  private logger: Logger = null;
 
   // create an injector class
-  constructor(public dependencies: Injector[], providers: Provider[]) {
+  constructor(
+    public dependencies: Injector[],
+    providers: Provider[],
+    name?: string
+  ) {
+    this.key = name || generateId(5);
+    this.logger = loggerFactory("sarina:di", Injector, this.key);
+
     providers.forEach(provider => {
       let wrapper = {
         provider: provider,
@@ -145,125 +103,167 @@ export class Injector {
     });
   }
 
-  // instantiate a type
+  public static print(injector: Injector, level: number = 0) {
+    let logger = loggerFactory("sarina::di", Injector);
+    let me = this;
+    function debug(...args: any[]) {
+      let tabs = "";
+      for (let i = 0; i < level; i++) tabs += "  ";
+      args.unshift(tabs);
+      logger.debug.apply(logger, args);
+    }
+
+    debug("|- [Injector][" + injector.key + "]");
+    injector.tokensWrappers.forEach((tw, i) => {
+      debug("  |- [TOKEN]", tw.token);
+      tw.providerWrappers.forEach((pw, j) => {
+        let _pw = pw.provider as any;
+
+        if (_pw.useType) {
+          debug("  | |- [TYPE-PROVIDER]", _pw.useType);
+        }
+        if (_pw.useValue) {
+          debug("  | |- [VALUE-PROVIDE]", _pw.useType);
+        }
+        if (_pw.useFactory) {
+          debug("  | |- [FACTORY-PROVI]", _pw.useType);
+        }
+        if (_pw.dependencies) {
+          _pw.dependencies.forEach(d => {
+            debug(
+              "  | | |-  DEP {",
+              d.token,
+              "-",
+              d.optional ? "options" : "required",
+              "}"
+            );
+          });
+        }
+      });
+    });
+    injector.dependencies.forEach(dep => {
+      Injector.print(dep, level + 1);
+    });
+  }
+
   public get<T>(token: Token): T {
-    let isMulti = false;
-    if (token instanceof StaticToken) {
-      isMulti = (token as StaticToken).multiple || false;
-    }
+    // check if token is multiple provider or not
+    let isMulti = this.detectIsTokenMulti(token);
 
-    let instances = this.resolveByToken(token);
+    // load the all instances of token with out any error
+    let resultObjects = this.resolveToken(token, isMulti);
 
-    if (!isMulti && instances.length === 0) {
-      throw NoProviderFoundForTokenError(token);
-    }
-    if (!isMulti && instances.length > 1) {
+    if (!isMulti && resultObjects.length > 1) {
       throw MultipleProviderFoundForTypeError(token);
     }
+    if (!isMulti && resultObjects.length === 0) {
+      throw NoProviderFoundForTokenError(token);
+    }
 
+    this.logger.debug("Get<T> Result:", resultObjects.length);
     if (!isMulti) {
-      return instances[0];
-    } else {
-      return instances as any;
+      return resultObjects[0] as any;
     }
+    return resultObjects as any;
   }
-  private resolveByToken(token: Token) {
-    let isMulti = false;
+
+  private detectIsTokenMulti(token: Token) {
     if (token instanceof StaticToken) {
-      isMulti = (token as StaticToken).multiple || false;
+      return (token as StaticToken).multiple || false;
     }
+    return false;
+  }
 
-    let instances = this.resolveTokenInSelfRepo(token);
-    if (instances.length === 0 || isMulti) {
-      instances.pushRange(this.resolveProvidersByDependencies(token));
-    }
-
+  private resolveToken(token: Token, isMulti: boolean) {
+    let tokenWrappers = this.locateTokenWrappers(token, isMulti);
+    let instances = [];
+    tokenWrappers.forEach(tw =>
+      instances.pushRange(this.activateTokenWrapper(tw))
+    );
     return instances;
   }
-  private resolveTokenInSelfRepo(token: Token) {
-    let tokenWrappers = this.tokensWrappers.filter(t => {
-      return t.token === token;
-    });
-    // let tokenWrappers = this.tokensWrappers.filter(t => t.token === token);
-    let instances: any = [];
-
-    tokenWrappers.forEach(tw => {
-      instances.pushRange(
-        tw.providerWrappers.map(wrapper => this.resolveTokenWrapper(wrapper))
-      );
-    });
-    return instances;
+  private locateTokenWrappers(token: Token, isMulti: boolean) {
+    let tokenWrappers = this.tokensWrappers.filter(t => t.token === token);
+    if (isMulti || tokenWrappers.length === 0) {
+      this.dependencies.forEach(childInjector => {
+        tokenWrappers.pushRange(
+          childInjector.locateTokenWrappers(token, isMulti)
+        );
+      });
+    }
+    this.logger.debug(
+      "locateTokenWrappers token:",
+      token,
+      "Result:" + tokenWrappers.length
+    );
+    return tokenWrappers;
   }
-  private resolveProvidersByDependencies(token: Token) {
-    let result: any[] = [];
-    this.dependencies.forEach(injector => {
-      result.pushRange(injector.get(token));
-    });
-    return result;
+  private activateTokenWrapper(tokenWrapper: TokenWrapper) {
+    return tokenWrapper.providerWrappers.map(pw =>
+      this.activateProvderWrapper(pw)
+    );
   }
-  private resolveTokenWrapper(wrapper: ProviderWrapper) {
-    let provider = wrapper.provider;
-
-    if (wrapper.instance) {
-      return wrapper.instance;
+  private activateProvderWrapper(providerWrapper: ProviderWrapper) {
+    let provider = providerWrapper.provider;
+    if (providerWrapper.instance) {
+      return providerWrapper.instance;
     }
 
-    if (wrapper.isPending) {
-      throw circularDependencyDetectedError(wrapper.provider, null); // TODO : Throw valid error
+    if (providerWrapper.isPending) {
+      throw circularDependencyDetectedError(providerWrapper.provider, null); // TODO : Throw valid error
     }
 
-    // we are resolving the provider
-    wrapper.isPending = true;
+    providerWrapper.isPending = true;
 
     if ((provider as Object).hasOwnProperty("useType")) {
-      wrapper.instance = this.resolveTypeProvider(provider as TypeProvider);
+      providerWrapper.instance = this.activateTypeProvider(
+        provider as TypeProvider
+      );
     }
     if ((provider as Object).hasOwnProperty("useValue")) {
-      wrapper.instance = this.resolveValueProvider(provider as ValueProvider);
+      providerWrapper.instance = this.activateValueProvider(
+        provider as ValueProvider
+      );
     }
     if ((provider as Object).hasOwnProperty("useFactory")) {
-      wrapper.instance = this.resolveFactoryProvider(
+      providerWrapper.instance = this.activateFactoryProvider(
         provider as FactoryProvider
       );
     }
 
-    wrapper.isPending = false;
-    return wrapper.instance;
+    providerWrapper.isPending = false;
+    return providerWrapper.instance;
   }
-  private resolveTypeProvider(provider: TypeProvider) {
+  private activateTypeProvider(provider: TypeProvider) {
     let deps: any[] = [];
-    if (provider.dependencies) {
-      deps.pushRange(
-        provider.dependencies.map(dep => {
-          let instance = this.get(dep.token);
-          if (!dep.optional && !instance) {
-            throw NoProviderFoundForTypeDependencyError(provider, dep.token);
-          }
-          return instance;
-        })
-      );
+    if (provider.dependencies && provider.dependencies.length > 0) {
+      deps = this.resolveDependencies(provider, provider.dependencies);
     }
 
     return this.instantiateType(provider.useType, deps);
   }
-  private resolveValueProvider(provider: ValueProvider) {
+  private activateValueProvider(provider: ValueProvider) {
     return provider.useValue;
   }
-  private resolveFactoryProvider(provider: FactoryProvider) {
+  private activateFactoryProvider(provider: FactoryProvider) {
     let deps: any[] = [];
-    if (provider.dependencies)
-      deps.pushRange(
-        provider.dependencies.map(dep => {
-          let instance = this.get(dep.token);
-          if (!dep.optional && !instance) {
-            throw NoProviderFoundForTypeDependencyError(provider, dep.token);
-          }
-          return instance;
-        })
-      );
-
+    if (provider.dependencies && provider.dependencies.length > 0) {
+      deps = this.resolveDependencies(provider, provider.dependencies);
+    }
     return provider.useFactory.apply(this, deps);
   }
+  private resolveDependencies(provider: Provider, dependencies: Dependency[]) {
+    return dependencies.map(dep => this.resolveDependency(dep, provider));
+  }
+  private resolveDependency(dep: Dependency, provider: Provider) {
+    let isDepMulti = this.detectIsTokenMulti(dep.token);
+    let resolvedObject = this.get<any>(dep.token);
+    if (!isDepMulti && !dep.optional && !resolvedObject) {
+      throw NoProviderFoundForTypeDependencyError(provider, dep.token);
+    }
+    return resolvedObject;
+  }
+
   private instantiateType(type: Type<any>, args: any[]) {
     let instance = Reflect.construct(type, args);
     return instance;

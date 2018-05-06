@@ -1,14 +1,16 @@
-import { Type } from "./../type";
-import { StaticToken } from "./token";
+import { RuntimeError, makeErrorFactory } from "./../error/error";
 import {
   TypeDecorator,
   TypeDecoratorFactory,
-  makeTypeDecoratorFactory,
-  makeParamDecoratorFactory,
   getMetadata,
+  makeParamDecoratorFactory,
+  makeTypeDecoratorFactory,
   setMetadata
 } from "./../metadata/decorators";
-import { RuntimeError, makeErrorFactory } from "./../error/error";
+
+import { StaticToken } from "./token";
+import { Type } from "./../type";
+import { loggerFactory } from "./../core-logger";
 
 /*
 
@@ -30,9 +32,13 @@ export interface Dependency {
   token: StaticToken;
   optional: boolean;
 }
+export interface Interceptor {
+  beforeInstantiate?: () => void;
+}
 
 export interface ProviderBase {
-  tokens: StaticToken[];
+  tokens?: StaticToken[];
+  interceptors?: any[];
 }
 export interface TypeProvider extends ProviderBase {
   useType: Type<any>;
@@ -119,6 +125,8 @@ export const ProviderDecoratorFactory = (provider?: {
         dependencies: []
       }
     );
+
+    target.prototype.__type__ = target.name;
 
     // add current provider to the list of tokens
     if (the_provider.tokens.count(t => target === t) === 0) {

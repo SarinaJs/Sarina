@@ -31,11 +31,22 @@
     "@types/node": "latest",
     "ts-node": "latest",
     "tslint": "latest",
-    "typescript": "latest"
+    "typescript": "latest",
+    "npm-watch": "latest"
+  },
+  "watch": {
+    "build": {
+      "patterns": ["src"],
+      "extensions": "ts",
+      "quiet": false,
+      "legacyWatch": false,
+      "delay": 1000
+    }
   },
   "scripts": {
     "tsc": "./node_modules/typescript/bin/tsc",
     "build": "tsc",
-    "test": "mocha --compilers ts:ts-node/register -R spec test/test.spec.ts"
+    "test": "mocha --compilers ts:ts-node/register -R spec test/test.spec.ts",
+    "watch": "npm-watch"
   }
 }
