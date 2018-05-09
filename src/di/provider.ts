@@ -8,9 +8,10 @@ import {
   setMetadata
 } from "./../metadata/decorators";
 
-import { StaticToken } from "./token";
+import { Token, StaticToken } from "./token";
 import { Type } from "./../type";
 import { loggerFactory } from "./../core-logger";
+import { SINGLETON_INJECTOR_SCOPE } from "./singleton-injector";
 
 /*
 
@@ -36,20 +37,22 @@ export interface Interceptor {
   beforeInstantiate?: () => void;
 }
 
-export interface ProviderBase {
-  tokens?: StaticToken[];
-  interceptors?: any[];
+export interface ScopeSupportProvider {
+  scope?: Token;
 }
-export interface TypeProvider extends ProviderBase {
+export interface ProviderBase {
+  tokens: StaticToken[];
+}
+export interface TypeProvider extends ProviderBase, ScopeSupportProvider {
   useType: Type<any>;
+  dependencies: Dependency[];
+}
+export interface FactoryProvider extends ProviderBase, ScopeSupportProvider {
+  useFactory: () => any;
   dependencies: Dependency[];
 }
 export interface ValueProvider extends ProviderBase {
   useValue: any;
-}
-export interface FactoryProvider extends ProviderBase {
-  useFactory: () => any;
-  dependencies: Dependency[];
 }
 export type Provider = TypeProvider | ValueProvider | FactoryProvider;
 
@@ -68,6 +71,7 @@ export const InvalidUsageOfInjectAnnotation: (
 // THE PROVIDER META_KEY
 const __PROVIDER_METADATA__ = "sarina::provider";
 const __PROVIDER_INJECT_METADATA__ = "sarina::provider::dependency";
+const __PROVIDER_SCOPE_METADATA__ = "sarina::provider::scope";
 
 interface InjectMetadata {
   index: number;
@@ -121,8 +125,9 @@ export const ProviderDecoratorFactory = (provider?: {
       target,
       {
         useType: target,
-        tokens: [],
-        dependencies: []
+        tokens: [target],
+        dependencies: [],
+        scope: null
       }
     );
 
@@ -166,6 +171,12 @@ export const ProviderDecoratorFactory = (provider?: {
   };
 };
 
+export const ScopeDecoratorFactory = (scopeToken: StaticToken) => {
+  return function(target: Type<any>) {
+    setMetadata(__PROVIDER_SCOPE_METADATA__, target, scopeToken);
+  };
+};
+
 // The provider decorator factory
 export const Provider: (
   provider?: { tokens?: StaticToken[] }
@@ -177,5 +188,22 @@ export const Inject: (
   token?: StaticToken
 ) => ParameterDecorator = makeParamDecoratorFactory([InjectDecoratorFactory]);
 
+export const Scope: (
+  scopeToken: Token
+) => TypeDecorator = makeTypeDecoratorFactory([ScopeDecoratorFactory]);
+
 export const getProvider = (type: Type<any>) =>
-  getMetadata<Provider>(__PROVIDER_METADATA__, type);
+  getMetadata<TypeProvider>(
+    __PROVIDER_METADATA__,
+    type,
+    null,
+    (provider: TypeProvider) => {
+      let scopeToken = getMetadata<Token>(__PROVIDER_SCOPE_METADATA__, type);
+
+      if (scopeToken) {
+        provider.scope = scopeToken;
+      }
+
+      return provider;
+    }
+  );

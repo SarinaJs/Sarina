@@ -1,52 +1,52 @@
 {
-  "name": "@sarina/core",
-  "version": "1.0.0",
-  "description":
-    "Sarina is a minimal and flexible NodeJs framework that lets you write modern, fast and easy use applications.",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/SarinaJs/Sarina"
-  },
-  "author": "Mohammad Parvareshi Hamrah",
-  "license": "MIT",
-  "keywords": ["nodejs", "javascirpt", "framework", "modular", "di"],
-  "contributors": ["Mohammad Parvareshi Hamrah <javadparvaresh@gmail.com>"],
-  "homepage": "https://sarinajs.github.io/",
-  "bugs": {
-    "email": "issues@sarinajs.com",
-    "url": "https://github.com/SarinaJs/Sarina/issues"
-  },
-  "engines": {
-    "node": "^8.0.0",
-    "npm": "^5.0.0"
-  },
-  "main": "lib/index.js",
-  "types": "index.d.ts",
-  "files": ["lib"],
-  "dependencies": {
-    "reflect-metadata": "latest"
-  },
-  "devDependencies": {
-    "npm": "latest",
-    "@types/node": "latest",
-    "ts-node": "latest",
-    "tslint": "latest",
-    "typescript": "latest",
-    "npm-watch": "latest"
-  },
-  "watch": {
-    "build": {
-      "patterns": ["src"],
-      "extensions": "ts",
-      "quiet": false,
-      "legacyWatch": false,
-      "delay": 1000
-    }
-  },
-  "scripts": {
-    "tsc": "./node_modules/typescript/bin/tsc",
-    "build": "tsc",
-    "test": "mocha --compilers ts:ts-node/register -R spec test/test.spec.ts",
-    "watch": "npm-watch"
-  }
+	"name": "@sarina/core",
+	"version": "1.0.0",
+	"description": "Sarina is a minimal and flexible NodeJs framework that lets you write modern, fast and easy use applications.",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/SarinaJs/Sarina"
+	},
+	"author": "Mohammad Parvareshi Hamrah",
+	"license": "MIT",
+	"keywords": ["nodejs", "javascirpt", "framework", "modular", "di"],
+	"contributors": ["Mohammad Parvareshi Hamrah <javadparvaresh@gmail.com>"],
+	"homepage": "https://sarinajs.github.io/",
+	"bugs": {
+		"email": "issues@sarinajs.com",
+		"url": "https://github.com/SarinaJs/Sarina/issues"
+	},
+	"engines": {
+		"node": "^8.0.0",
+		"npm": "^5.0.0"
+	},
+	"main": "lib/index.js",
+	"types": "index.d.ts",
+	"files": ["lib"],
+	"dependencies": {
+		"reflect-metadata": "latest"
+	},
+	"devDependencies": {
+		"npm": "latest",
+		"@types/node": "latest",
+		"ts-node": "latest",
+		"tslint": "latest",
+		"typescript": "latest",
+		"npm-watch": "latest"
+	},
+	"watch": {
+		"build": {
+			"patterns": ["src"],
+			"extensions": "ts",
+			"quiet": false,
+			"legacyWatch": false,
+			"delay": 1000
+		}
+	},
+	"scripts": {
+		"tsc": "./node_modules/typescript/bin/tsc",
+		"build": "tsc",
+		"test": "mocha --compilers ts:ts-node/register -R spec test/test.spec.ts",
+		"watch": "npm-watch",
+		"ex1": "ts-node ./examples/basic/main.ts"
+	}
 }

@@ -4,10 +4,11 @@ import { Package, getPackage } from "./package";
 import { Provider, getProvider } from "./di/provider";
 import { RuntimeError, makeErrorFactory } from "./error/error";
 import { Type, isType } from "./type";
-
-import { Application } from "./application";
-import { Injector } from "./di/injector";
 import { loggerFactory } from "./core-logger";
+import { Container } from "./di/container";
+import { Injector } from "./di/injector";
+import { SingletonInjector } from "./di/singleton-injector";
+import { Application } from "./application";
 
 let logger = loggerFactory("sarina", "application-factory");
 
@@ -25,18 +26,26 @@ export class AppliactionBuilder {
 
   // create an instance of appliaction
   public create(typeOrPackage: Type<any> | Package): Application {
-    // resolve the root package injector
-    let rootInjector = isType(typeOrPackage)
+    // resolve the root container
+    let rootContainer = isType(typeOrPackage)
       ? this.resolvePackageType(typeOrPackage)
       : this.loadPackage(typeOrPackage, []);
 
-    Injector.print(rootInjector);
+    // Print all providers
+    Container.print(rootContainer);
+
+    // instantiate injector
+    let applicationInjector = new SingletonInjector(rootContainer);
+    let singletonInjector = new SingletonInjector(
+      rootContainer,
+      applicationInjector
+    );
 
     // create appliaction instance and resolve the promise
-    return new Application(rootInjector);
+    return new Application(singletonInjector);
   }
 
-  private resolvePackageType(packageType: Type<any>): Injector {
+  private resolvePackageType(packageType: Type<any>): Container {
     // resolve package based on @Package annotation
     let the_package = getPackage(packageType);
 
@@ -52,7 +61,7 @@ export class AppliactionBuilder {
   private loadPackage(
     the_package: Package,
     package_providers: Provider[]
-  ): Injector {
+  ): Container {
     // initiate imports and providers with default values
     the_package.imports = the_package.imports || [];
     the_package.providers = the_package.providers || [];
@@ -61,7 +70,7 @@ export class AppliactionBuilder {
     the_package.providers.pushRange(package_providers);
 
     // fetch and resolve dependencies
-    let dependencies: Injector[] = the_package.imports.map(type => {
+    let parentContainers: Container[] = the_package.imports.map(type => {
       return isType(type)
         ? this.resolvePackageType(type)
         : this.loadPackage(type, []);
@@ -73,7 +82,7 @@ export class AppliactionBuilder {
       providers.pushRange([isType(p) ? getProvider(p) : p]);
     });
 
-    // create and return package injector instance
-    return new Injector(dependencies, providers, the_package.name);
+    // create and return package container instance
+    return new Container(parentContainers, providers, the_package.name);
   }
 }
