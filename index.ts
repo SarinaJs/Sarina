@@ -1,4 +1,3 @@
-
 // TYPE
 export * from "./src/type";
 
@@ -21,6 +20,9 @@ export * from "./src/metadata/decorators";
 export * from "./src/di/injector";
 export * from "./src/di/provider";
 export * from "./src/di/token";
+export * from "./src/di/appliaction-injector";
+export * from "./src/di/singleton-injector";
+export * from "./src/di/prototype-injector";
 
 // Error
 export * from "./src/error/error";
