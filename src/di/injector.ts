@@ -13,10 +13,10 @@ import {
 } from "./provider";
 import { Container } from "./container";
 
-import { NoProviderFoundForTokenError } from "./errors/no-provider-found-for-token.error";
-import { NoProviderFoundForTypeDependencyError } from "./errors/no-provider-found-for-type-dependency.error";
-import { MultipleProviderFoundForTypeError } from "./errors/multiple-provider-found-for-type.error";
-import { ScopeNotFoundError } from "./errors/scope-not-found.error";
+import { NoProviderFoundForTokenError } from "./../errors/no-provider-found-for-token.error";
+import { NoProviderFoundForTypeDependencyError } from "./../errors/no-provider-found-for-type-dependency.error";
+import { MultipleProviderFoundForTypeError } from "./../errors/multiple-provider-found-for-type.error";
+import { ScopeNotFoundError } from "./../errors/scope-not-found.error";
 
 export const INJECTOR_PROVIDER_TOKEN = new StaticToken({
   description: "INJECTOR_PROVIDER_TOKEN",
