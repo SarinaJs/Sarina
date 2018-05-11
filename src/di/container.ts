@@ -16,9 +16,9 @@ export class Container {
   public constructor(
     public parentContainers: Container[],
     providers: Provider[],
-    name?: string
+    key?: string
   ) {
-    this.key = name || generateId(5);
+    this.key = key || generateId(5);
 
     providers.forEach(provider => {
       provider.tokens.forEach(pt => {
@@ -88,7 +88,7 @@ export class Container {
   public exists(token: Token) {
     return this.locateProviderByToken(token).length > 0;
   }
-  public locateProviders(token: Token) {
+  public locate(token: Token) {
     let providers: Provider[] = [];
     this.locateProviderByToken(token).forEach(tw => {
       providers.pushRange(tw.providers);

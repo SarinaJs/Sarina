@@ -81,9 +81,9 @@ export function getMetadata<T>(
   defaultValue?: T,
   mapperFunc?: (metadata: any) => T
 ): T {
-  let meta = Reflect.getMetadata(key, target) || defaultValue;
-  if (mapperFunc != null) return mapperFunc(meta);
-  return meta;
+  let meta = Reflect.getMetadata(key, target);
+  if (meta && mapperFunc != null) return mapperFunc(meta);
+  return meta || defaultValue;
 }
 
 export function setMetadata(key: string, target: Type<any>, value: any) {

@@ -1,20 +1,21 @@
-import { RuntimeError, makeErrorFactory } from "./../error/error";
+import { SarinaError } from "./../error";
 import {
-  TypeDecorator,
-  TypeDecoratorFactory,
-  getMetadata,
-  makeParamDecoratorFactory,
-  makeTypeDecoratorFactory,
-  setMetadata
+	TypeDecorator,
+	TypeDecoratorFactory,
+	getMetadata,
+	makeParamDecoratorFactory,
+	makeTypeDecoratorFactory,
+	setMetadata
 } from "./../metadata/decorators";
 
 import { Token, StaticToken } from "./token";
 import { Type } from "./../type";
 import { loggerFactory } from "./../core-logger";
 import { SINGLETON_INJECTOR_SCOPE } from "./singleton-injector";
+import { InvalidUsageOfInjectAnnotation } from "./errors/invalid-usage-of-inject-annotation.error"
 
+////////////////////////////////////////////////////////////////////////////////////////
 /*
-
 	Providers:
 		- Provider should have at least one Token
 		- Provider can have more than one Token
@@ -30,180 +31,204 @@ import { SINGLETON_INJECTOR_SCOPE } from "./singleton-injector";
 
 */
 export interface Dependency {
-  token: StaticToken;
-  optional: boolean;
+	token: StaticToken;
+	optional: boolean;
 }
 export interface Interceptor {
-  beforeInstantiate?: () => void;
+	beforeInstantiate?: () => void;
 }
 
 export interface ScopeSupportProvider {
-  scope?: Token;
+	scope?: Token;
 }
 export interface ProviderBase {
-  tokens: StaticToken[];
+	tokens: StaticToken[];
 }
 export interface TypeProvider extends ProviderBase, ScopeSupportProvider {
-  useType: Type<any>;
-  dependencies: Dependency[];
+	useType: Type<any>;
+	dependencies: Dependency[];
 }
 export interface FactoryProvider extends ProviderBase, ScopeSupportProvider {
-  useFactory: () => any;
-  dependencies: Dependency[];
+	useFactory: () => any;
+	dependencies: Dependency[];
 }
 export interface ValueProvider extends ProviderBase {
-  useValue: any;
+	useValue: any;
 }
 export type Provider = TypeProvider | ValueProvider | FactoryProvider;
 
-// ERRORS
-export const InvalidUsageOfInjectAnnotation: (
-  target: Type<any>,
-  propertyKey: string | symbol
-) => RuntimeError = makeErrorFactory({
-  namespace: "sarina",
-  code: "di:invalid-inject-annotation-definition",
-  template: "'@Inject' annotation only is possible on constructor parameters.",
-  helpTemplate:
-    "You have used @Inject annoation on {1} for {0}. The @Inject annoation only allowed for constructor parameter and you can't use it for functions of class. To fix this error remove the @Inject annotation for {1} in {0}."
-});
-
-// THE PROVIDER META_KEY
-const __PROVIDER_METADATA__ = "sarina::provider";
-const __PROVIDER_INJECT_METADATA__ = "sarina::provider::dependency";
-const __PROVIDER_SCOPE_METADATA__ = "sarina::provider::scope";
-
 interface InjectMetadata {
-  index: number;
-  dependency: Dependency;
+	index: number;
+	dependency: Dependency;
 }
+////////////////////////////////////////////////////////////////////////////////////////
+// ERRORS
+
+////////////////////////////////////////////////////////////////////////////////////////
+// THE PROVIDER META_KEY
+const __PROVIDER_INJECT_METADATA__ = "sarina::provider::dependency";
+const __PROVIDER_TOKEN_METADATA__ = "sarina::provider::token";
+const __PROVIDER_SCOPE_METADATA__ = "sarina::provider::scope";
+const __PROVIDER_METADATA__ = "sarina::provider";
+////////////////////////////////////////////////////////////////////////////////////////
 export const InjectDecoratorFactory = (token: StaticToken) => {
-  return function(
-    target: Type<any>,
-    propertyKey: string | symbol,
-    parameterIndex: number
-  ) {
-    // only constructor parameter is allowed
-    if (propertyKey) {
-      throw InvalidUsageOfInjectAnnotation(target, propertyKey);
-    }
+	return function (
+		target: Type<any>,
+		propertyKey: string | symbol,
+		parameterIndex: number
+	) {
+		// only constructor parameter is allowed
+		if (propertyKey) {
+			throw new InvalidUsageOfInjectAnnotation(target, propertyKey);
+		}
 
-    let deps = getMetadata<InjectMetadata[]>(
-      __PROVIDER_INJECT_METADATA__,
-      target,
-      []
-    );
+		// get the dependencies
+		let deps = getMetadata<InjectMetadata[]>(
+			__PROVIDER_INJECT_METADATA__,
+			target,
+			[]
+		);
 
-    let propertyDep: InjectMetadata = deps.find(
-      dep => dep.index === parameterIndex
-    );
-    if (!propertyDep) {
-      propertyDep = {
-        index: parameterIndex,
-        dependency: {
-          token: null,
-          optional: false
-        }
-      };
-      deps.push(propertyDep);
-    }
+		// find the property dependency
+		let propertyDep: InjectMetadata = deps.find(
+			dep => dep.index === parameterIndex
+		);
 
-    propertyDep.dependency.token = token;
+		// create a property dependency if not exists
+		if (!propertyDep) {
+			propertyDep = {
+				index: parameterIndex,
+				dependency: {
+					token: null,
+					optional: false
+				}
+			};
+			deps.push(propertyDep);
+		}
 
-    setMetadata(__PROVIDER_INJECT_METADATA__, target, deps);
-  };
+		// update the dependency token value
+		propertyDep.dependency.token = token;
+
+		// set the metadata
+		setMetadata(__PROVIDER_INJECT_METADATA__, target, deps);
+	};
 };
+export const TokenDecoratorFactory = (tokens: Token[] | Token) => {
+	return function (target: Type<any>) {
+		// ignore null or empty tokens
+		if (!tokens && Array.isArray(tokens) && tokens.length === 0) return;
 
-// THE PROVIDER DECORATOR FACTORY
+		// fetch curren tokens
+		let _tokens =
+			getMetadata<Token[]>(__PROVIDER_TOKEN_METADATA__, target) || [];
+
+		// update the tokens list
+		if (Array.isArray(tokens)) _tokens.pushRange(tokens);
+		else _tokens.push(tokens);
+
+		// set the metadata
+		setMetadata(__PROVIDER_TOKEN_METADATA__, target, _tokens);
+	};
+};
+export const ScopeDecoratorFactory = (scopeToken: Token) => {
+	return function (target: Type<any>) {
+		// we always over-write the scope of target
+		setMetadata(__PROVIDER_SCOPE_METADATA__, target, scopeToken);
+	};
+};
 export const ProviderDecoratorFactory = (provider?: {
-  tokens?: StaticToken[];
+	tokens?: Token[];
+	scope?: Token;
 }) => {
-  return function(target: Type<any>) {
-    // fetch all current providers metdata
-    let the_provider = getMetadata<TypeProvider>(
-      __PROVIDER_METADATA__,
-      target,
-      {
-        useType: target,
-        tokens: [target],
-        dependencies: [],
-        scope: null
-      }
-    );
+	return function (target: Type<any>) {
+		// fetch all current providers metdata
+		let the_provider = getMetadata<TypeProvider>(
+			__PROVIDER_METADATA__,
+			target,
+			{
+				useType: target,
+				tokens: [target],
+				dependencies: [],
+				scope: null
+			}
+		);
 
-    target.prototype.__type__ = target.name;
+		// We should add current class as token into list
+		if (the_provider.tokens.count(t => target === t) === 0) {
+			the_provider.tokens.push(target);
+		}
 
-    // add current provider to the list of tokens
-    if (the_provider.tokens.count(t => target === t) === 0) {
-      the_provider.tokens.push(target);
-    }
+		// set the tokens
+		if (provider && provider.tokens) {
+			the_provider.tokens.pushRange(provider.tokens);
+		}
 
-    // add all tokens into final result
-    if (provider && provider.tokens)
-      the_provider.tokens.pushRange(provider.tokens);
+		// set the scope
+		if (provider && provider.scope) {
+			the_provider.scope = provider.scope;
+		}
 
-    // fetch dependencies
-    const constructor_dependecnies = getMetadata(
-      "design:paramtypes",
-      target,
-      []
-    );
-    const constructor_inject: InjectMetadata[] = getMetadata<any[]>(
-      __PROVIDER_INJECT_METADATA__,
-      target,
-      []
-    );
-    the_provider.dependencies = constructor_dependecnies.map((cdep, index) => {
-      let dependency: Dependency = {
-        token: null,
-        optional: false
-      };
-      let inject = constructor_inject.find(inject => inject.index === index);
-      if (inject) {
-        dependency.token = inject.dependency.token || cdep;
-        dependency.optional = inject.dependency.optional || false;
-      } else {
-        dependency.token = cdep;
-      }
-      return dependency;
-    });
-    setMetadata(__PROVIDER_METADATA__, target, the_provider);
-  };
+		// Fetch the class dependencies ( constructor arguments )
+		const constructor_dependecnies = getMetadata(
+			"design:paramtypes",
+			target,
+			[]
+		);
+		the_provider.dependencies = constructor_dependecnies.map((cdep, index) => {
+			let dependency: Dependency = {
+				token: cdep,
+				optional: false
+			};
+			return dependency;
+		});
+		setMetadata(__PROVIDER_METADATA__, target, the_provider);
+	};
 };
 
-export const ScopeDecoratorFactory = (scopeToken: StaticToken) => {
-  return function(target: Type<any>) {
-    setMetadata(__PROVIDER_SCOPE_METADATA__, target, scopeToken);
-  };
-};
-
-// The provider decorator factory
+// DECORATORS
+///////////////////////////////////////////////////////////
+export const Inject: (
+	token?: StaticToken
+) => ParameterDecorator = makeParamDecoratorFactory([InjectDecoratorFactory]);
+export const Scope: (
+	scopeToken: Token
+) => TypeDecorator = makeTypeDecoratorFactory([ScopeDecoratorFactory]);
 export const Provider: (
-  provider?: { tokens?: StaticToken[] }
+	provider?: { tokens?: Token[]; scope?: Token }
 ) => TypeDecorator = makeTypeDecoratorFactory([ProviderDecoratorFactory]);
 
-// The inject decorator factory
-// 		- The original inject factory
-export const Inject: (
-  token?: StaticToken
-) => ParameterDecorator = makeParamDecoratorFactory([InjectDecoratorFactory]);
-
-export const Scope: (
-  scopeToken: Token
-) => TypeDecorator = makeTypeDecoratorFactory([ScopeDecoratorFactory]);
-
+// FETCH UTIL
+///////////////////////////////////////////////////////////
 export const getProvider = (type: Type<any>) =>
-  getMetadata<TypeProvider>(
-    __PROVIDER_METADATA__,
-    type,
-    null,
-    (provider: TypeProvider) => {
-      let scopeToken = getMetadata<Token>(__PROVIDER_SCOPE_METADATA__, type);
+	getMetadata<TypeProvider>(
+		__PROVIDER_METADATA__,
+		type,
+		null,
+		(provider: TypeProvider) => {
+			// Fetch the inject metadata
+			let injects = getMetadata<InjectMetadata[]>(
+				__PROVIDER_INJECT_METADATA__,
+				type
+			);
+			// Set the provider scope
+			provider.scope =
+				provider.scope || getMetadata<Token>(__PROVIDER_SCOPE_METADATA__, type);
 
-      if (scopeToken) {
-        provider.scope = scopeToken;
-      }
+			// Fetch the inject metadata
+			let tokens = getMetadata<Token[]>(__PROVIDER_TOKEN_METADATA__, type);
+			provider.tokens = provider.tokens || [];
+			if (tokens) provider.tokens.pushRange(tokens);
 
-      return provider;
-    }
-  );
+			if (injects) {
+				provider.dependencies.forEach((dep, index) => {
+					let inject = injects.find(inject => inject.index === index);
+					if (inject) {
+						dep.optional = inject.dependency.optional;
+						dep.token = inject.dependency.token;
+					}
+				});
+			}
+
+			return provider;
+		}
+	);

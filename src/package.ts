@@ -1,6 +1,10 @@
 import { Type } from "./type";
 import { StaticToken } from "./di/token";
-import { Provider, ProviderDecoratorFactory } from "./di/provider";
+import {
+  Provider,
+  ProviderDecoratorFactory,
+  TokenDecoratorFactory
+} from "./di/provider";
 import {
   TypeDecorator,
   makeTypeDecoratorFactory,
@@ -44,13 +48,13 @@ export const Package: (
   the_package: Package
 ) => TypeDecorator = makeTypeDecoratorFactory([
   PackageDecoratorFactory,
-  (pkg: Package) => {
-    // register current module class a ModuleProvider
-    return ProviderDecoratorFactory({
-      tokens: [PACKAGE_PROVIDER_TOKEN]
-    });
-  }
+  ProviderDecoratorFactory,
+  (pkg: Package) => TokenDecoratorFactory(PACKAGE_PROVIDER_TOKEN)
 ]);
 
 export const getPackage = (type: Type<any>) =>
-  getMetadata<Package>(__PACKAGE_METADATA__, type);
+  getMetadata<Package>(__PACKAGE_METADATA__, type, null, (pkg: Package) => {
+    pkg.imports = pkg.imports || [];
+    pkg.providers = pkg.providers || [];
+    return pkg;
+  });

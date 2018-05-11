@@ -1,6 +1,6 @@
 import { Type } from "./type";
 import { TypeDecorator, makeTypeDecoratorFactory } from "./metadata/decorators";
-import { Provider, ProviderDecoratorFactory } from "./di/provider";
+import { Provider, TokenDecoratorFactory } from "./di/provider";
 import { StaticToken } from "./di/token";
 
 export const BOOTABLE_PROVIDER_TOKEN = new StaticToken({
@@ -14,9 +14,7 @@ export interface OnBoot {
 
 // The bootable decorator factory instance
 export const BootableDecoratorFactory = () => {
-  return ProviderDecoratorFactory({
-    tokens: [BOOTABLE_PROVIDER_TOKEN]
-  });
+  return TokenDecoratorFactory([BOOTABLE_PROVIDER_TOKEN]);
 };
 
 // The bootable decorator factory

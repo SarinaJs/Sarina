@@ -14,4 +14,4 @@ export class StaticToken {
   };
 }
 
-export type Token = StaticToken | Type<any> | Symbol;
+export type Token = Type<any> | Symbol | StaticToken;
