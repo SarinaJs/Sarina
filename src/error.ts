@@ -1,105 +1,114 @@
 import { error } from "util";
 import { isType, Type } from "./type";
 import { formatValueToString } from "./util";
+import { Version } from "./version";
 
-export abstract class AbstractError extends Error {
-  public namespace: string;
-  public code: string;
-  public template: ((...args: any[]) => string) | string;
-  public helpTemplate: ((...args: any[]) => string) | string;
+export abstract class RuntimeError extends Error {
 
-  constructor(...parameters: any[]) {
-    super("NO MESSAGE");
+	private parameters: any[];
 
-    let config = {
-      maxDepth: 5
-    };
+	private _type: string;
+	private _namespace: string;
+	private _code: string;
+	private _message: string;
+	private _note: string;
+	private _url: string;
+	private _finalMessage: string;
 
-    this.message = this.createMessage(
-      this,
-      this.namespace,
-      this.code,
-      this.template,
-      this.helpTemplate || null,
-      parameters
-    );
-  }
+	// Type
+	public get type(): string {
+		return this._type;
+	}
+	public set type(type: string) {
+		this._type = this.formatType(type, this.parameters);
+	}
+	// Namespace
+	public get namespace(): string {
+		return this._namespace;
+	}
+	public set namespace(namespace: string) {
+		this._namespace = ((this._namespace && this._namespace !== "") ? this._namespace + ":" : "") + this.formatNamespace(namespace, this.parameters);
+	}
+	// Code
+	public get code(): string {
+		return this._code;
+	}
+	public set code(code: string) {
+		this._code = this.formatCode(code, this.parameters);
+	}
+	// Message
+	public get message() {
+		return this._message;
+	}
+	public set message(message: string) {
+		this._message = this.formatMessage(message, this.parameters);
+	}
+	// Note
+	public get note(): string {
+		return this._note;
+	}
+	public set note(note: string) {
+		this._note = this.formatNote(note, this.parameters);
+	}
+	// Url
+	public get url(): string {
+		return this._url;
+	}
+	public set url(url: string) {
+		this._url = this.formatUrl(url, this.parameters);
+	}
 
-  private createMessage(
-    errorInstance: Error,
-    namespace: string,
-    code: string,
-    template: string | ((...args: any[]) => string),
-    helpTemplate: string | ((...args: any[]) => string),
-    parameters: any[]
-  ): string {
-    let me = this;
-    let message = "[Runtime Error]\n ";
-    message += "\t Code : " + (namespace ? namespace + ":" : "") + code;
 
-    message += "\n\t Message : " + this.formatTemplate(template, parameters);
+	constructor(...parameters: any[]) {
+		super();
+		this.parameters = parameters;
 
-    if (helpTemplate) {
-      message += "\n\t Note : " + this.formatTemplate(helpTemplate, parameters);
-    }
+		this.type = this.constructor.name;
+	}
+	public toString() {
+		let message = `[${this._type}] ${this._message}`;
+		if (this._namespace) message += `\n\tNamespace: ${this._namespace}`;
+		if (this._code) message += `\n\tCode: ${this._code}`;
+		if (this._note) message += `\n\tNote: ${this._note}`;
+		if (this._url) message += `\n\tUrl: ${this._url}`;
+		return message;
+	}
+	protected formatType(type: string, parameters: any[]) {
+		return this.formatTemplate(type, parameters);
+	}
+	protected formatNamespace(namespace: string, parameters: any[]) {
+		return this.formatTemplate(namespace, parameters);
+	}
+	protected formatCode(code: string, parameters: any[]) {
+		return this.formatTemplate(code, parameters);
+	}
+	protected formatMessage(message: string, parameters: any[]) {
+		return this.formatTemplate(message, parameters);
+	}
+	protected formatNote(note: string, parameters: any[]) {
+		return this.formatTemplate(note, parameters);
+	}
+	protected formatUrl(url: string, parameters: any[]) {
+		return this.formatTemplate(url, parameters);
+	}
 
-    return message;
-  }
+	private formatTemplate(
+		template: string,
+		parameters: any[]
+	) {
+		if (template == null) {
+			return "";
+		}
 
-  private formatTemplate(
-    template: ((...args: any[]) => string) | string,
-    parameters: any[]
-  ) {
-    let strTemplate: string = "";
-    if (template == null) {
-      return "";
-    }
-    if (typeof template === "function") {
-      strTemplate = template.apply(template, parameters);
-    } else {
-      strTemplate = template as string;
-    }
-
-    return strTemplate.replace(/\{\d+\}/g, function(match) {
-      let index = +match.slice(1, -1);
-      if (index < parameters.length) {
-        if (typeof parameters[index] === "symbol") {
-          return (parameters[index] as Symbol).toString();
-        }
-        return formatValueToString(parameters[index]).join(" ");
-      }
-      return match;
-    });
-  }
-
-  private toDebugString(obj, maxDepth) {
-    if (isType(obj)) {
-      return obj.name;
-    } else if (typeof obj === "function") {
-      return obj.toString().replace(/ \{[\s\S]*$/, "");
-    } else if (typeof obj === "undefined") {
-      return "undefined";
-    } else if (typeof obj !== "string") {
-      return formatValueToString(obj);
-    }
-    return obj;
-  }
-  private serializeObject(obj, maxDepth) {
-    let seen = [];
-
-    if (!this.isValidObjectMaxDepth(maxDepth)) {
-      maxDepth = 5;
-    }
-    return JSON.stringify(obj);
-  }
-
-  private isValidObjectMaxDepth(maxDepth) {
-    return typeof maxDepth === "number" && maxDepth > 0;
-  }
-}
-
-export class SarinaError extends AbstractError {
-  public namespace: string = "Sarina";
-  public code: string = "sarina::unknown-error";
-  public template: string = "An error occured";
+		return template.replace(/\{\d+\}/g, function (match) {
+			let index = +match.slice(1, -1);
+			if (index < parameters.length) {
+				if (typeof parameters[index] === "symbol") {
+					return (parameters[index] as Symbol).toString();
+				}
+				return formatValueToString(parameters[index]).join(" ");
+			}
+			return match;
+		});
+	}
 }

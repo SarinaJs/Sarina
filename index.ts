@@ -7,6 +7,18 @@ import "./src/extenssions/array.extenssions";
 // Error
 export * from "./src/error";
 
+// Errors
+export * from "./src/errors/di-base.error";
+export * from "./src/errors/invalid-usage-of-inject-annotation.error";
+export * from "./src/errors/multiple-provider-found-for-type.error";
+export * from "./src/errors/no-provider-found-for-token.error";
+export * from "./src/errors/no-provider-found-for-type-dependency.error";
+export * from "./src/errors/scope-not-found.error";
+export * from "./src/errors/multiple-annotation-defined.error";
+export * from "./src/errors/no-package-annotation.error";
+export * from "./src/errors/cyclic-dependency-detected-for-provider.error";
+
+
 // Sarina
 export * from "./src/sarina";
 
@@ -27,11 +39,4 @@ export * from "./src/di/token";
 export * from "./src/di/appliaction-injector";
 export * from "./src/di/singleton-injector";
 export * from "./src/di/prototype-injector";
-export * from "./src/errors/di-base.error";
-export * from "./src/errors/invalid-usage-of-inject-annotation.error";
-export * from "./src/errors/multiple-provider-found-for-type.error";
-export * from "./src/errors/no-provider-found-for-token.error";
-export * from "./src/errors/no-provider-found-for-type-dependency.error";
-export * from "./src/errors/scope-not-found.error";
-export * from "./src/errors/multiple-annotation-defined.error";
-export * from "./src/errors/no-package-annotation.error";
+

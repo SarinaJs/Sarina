@@ -1,6 +1,9 @@
-import { SarinaError } from "./../error";
+import { RuntimeError } from "./../error";
+import { Version } from "./../version";
 
-export class DependencyInjectionError extends SarinaError {
-	public code = "di" + ((this.code) ? ":" + this.code : "");
+export class DependencyInjectionError extends RuntimeError {
+	public namespace = "sarina/core";
+	public code = "sarina:di"
+	public url = Version.website + "/doc/" + Version.version + "/errors/{code}";
 }
 

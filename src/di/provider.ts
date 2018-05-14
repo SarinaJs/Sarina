@@ -1,4 +1,3 @@
-import { SarinaError } from "./../error";
 import {
 	TypeDecorator,
 	TypeDecoratorFactory,
@@ -31,8 +30,8 @@ import { InvalidUsageOfInjectAnnotation } from "./../errors/invalid-usage-of-inj
 
 */
 export interface Dependency {
-	token: StaticToken;
-	optional: boolean;
+	token: Token;
+	optional?: boolean;
 }
 export interface Interceptor {
 	beforeInstantiate?: () => void;
@@ -42,14 +41,14 @@ export interface ScopeSupportProvider {
 	scope?: Token;
 }
 export interface ProviderBase {
-	tokens: StaticToken[];
+	tokens: Token[];
 }
 export interface TypeProvider extends ProviderBase, ScopeSupportProvider {
 	useType: Type<any>;
 	dependencies: Dependency[];
 }
 export interface FactoryProvider extends ProviderBase, ScopeSupportProvider {
-	useFactory: () => any;
+	useFactory: (...args: any[]) => any;
 	dependencies: Dependency[];
 }
 export interface ValueProvider extends ProviderBase {
