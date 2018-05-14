@@ -23,7 +23,8 @@ import {
 	StaticToken,
 	SingletonInjector,
 	ScopeNotFoundError,
-	INJECTOR_PROVIDER_TOKEN
+	INJECTOR_PROVIDER_TOKEN,
+	Inject
 } from "./../index";
 
 describe("Sarina/Core/di", () => {
@@ -146,6 +147,50 @@ describe("Sarina/Core/di", () => {
 				expect(prv.scope).to.have.eq(token);
 			});
 		});
+		describe("@Inject", () => {
+			it("Register empty @Inject", () => {
+
+				class MyProvider2 {
+
+				}
+				@Provider()
+				class MyProvider {
+					constructor(@Inject() name: MyProvider2) { }
+				}
+
+				let prv = getProvider(MyProvider);
+				expect(prv.dependencies.find((dep, index) => index === 0).token).to.be.eq(MyProvider2)
+				expect(prv.dependencies.find((dep, index) => index === 0).optional).to.be.eq(false)
+			})
+			it("Register @Inject with token", () => {
+
+				class MyProvider2 {
+
+				}
+				@Provider()
+				class MyProvider {
+					constructor(@Inject(MyProvider2) name: any) { }
+				}
+
+				let prv = getProvider(MyProvider);
+				expect(prv.dependencies.find((dep, index) => index === 0).token).to.be.eq(MyProvider2)
+				expect(prv.dependencies.find((dep, index) => index === 0).optional).to.be.eq(false)
+			})
+			it("Register @Inject with optional flag", () => {
+
+				class MyProvider2 {
+
+				}
+				@Provider()
+				class MyProvider {
+					constructor(@Inject(MyProvider2, true) name: any) { }
+				}
+
+				let prv = getProvider(MyProvider);
+				expect(prv.dependencies.find((dep, index) => index === 0).token).to.be.eq(MyProvider2)
+				expect(prv.dependencies.find((dep, index) => index === 0).optional).to.be.eq(true)
+			})
+		})
 		describe("@Bootable", () => {
 			it("#getProvider should not register class as provider", () => {
 				@Bootable()

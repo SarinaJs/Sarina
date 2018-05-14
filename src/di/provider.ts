@@ -70,7 +70,7 @@ const __PROVIDER_TOKEN_METADATA__ = "sarina::provider::token";
 const __PROVIDER_SCOPE_METADATA__ = "sarina::provider::scope";
 const __PROVIDER_METADATA__ = "sarina::provider";
 ////////////////////////////////////////////////////////////////////////////////////////
-export const InjectDecoratorFactory = (token: StaticToken) => {
+export const InjectDecoratorFactory = (token: StaticToken, optional?: boolean) => {
 	return function (
 		target: Type<any>,
 		propertyKey: string | symbol,
@@ -99,14 +99,15 @@ export const InjectDecoratorFactory = (token: StaticToken) => {
 				index: parameterIndex,
 				dependency: {
 					token: null,
-					optional: false
+					optional: optional
 				}
 			};
 			deps.push(propertyDep);
 		}
 
 		// update the dependency token value
-		propertyDep.dependency.token = token;
+		if (token)
+			propertyDep.dependency.token = token;
 
 		// set the metadata
 		setMetadata(__PROVIDER_INJECT_METADATA__, target, deps);
@@ -187,7 +188,8 @@ export const ProviderDecoratorFactory = (provider?: {
 // DECORATORS
 ///////////////////////////////////////////////////////////
 export const Inject: (
-	token?: StaticToken
+	token?: StaticToken,
+	optional?: boolean
 ) => ParameterDecorator = makeParamDecoratorFactory([InjectDecoratorFactory]);
 export const Scope: (
 	scopeToken: Token
@@ -222,8 +224,8 @@ export const getProvider = (type: Type<any>) =>
 				provider.dependencies.forEach((dep, index) => {
 					let inject = injects.find(inject => inject.index === index);
 					if (inject) {
-						dep.optional = inject.dependency.optional;
-						dep.token = inject.dependency.token;
+						dep.optional = inject.dependency.optional || dep.optional;
+						dep.token = inject.dependency.token || dep.token;
 					}
 				});
 			}
