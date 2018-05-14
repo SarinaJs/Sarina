@@ -50,7 +50,5 @@
 		"tsc": "./node_modules/typescript/bin/tsc",
 		"build": "tsc",
 		"test": "mocha --compilers ts:ts-node/register -R spec test/**/**.spec.ts",
-		"ex1": "ts-node ./examples/scoped/main.ts",
-		"ex2": "ts-node ./examples/myTest/main.ts"
 	}
 }
