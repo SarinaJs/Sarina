@@ -1,6 +1,6 @@
 {
   "name": "@sarina/core",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Sarina is a minimal and flexible NodeJs framework that lets you write modern, fast and easy use applications.",
   "repository": {
     "type": "git",
