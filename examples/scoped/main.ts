@@ -13,7 +13,7 @@ import {
 
 //////////////////////////////////////////////////////////////////////////////
 class SessionScope extends Injector {
-  public static scope = new StaticToken({ description: "SESSION_SCOPE" });
+  public static scope = new StaticToken({ description: "Session scope" });
 
   public getScope() {
     return SessionScope.scope;

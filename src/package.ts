@@ -15,7 +15,7 @@ import { MultipleAnnotationDefinedError } from "./errors/multiple-annotation-def
 
 // The package provider token
 export const PACKAGE_PROVIDER_TOKEN: StaticToken = new StaticToken({
-	description: "PACKAGE_PROVIDER",
+	description: "Package provider token",
 	multiple: true
 });
 

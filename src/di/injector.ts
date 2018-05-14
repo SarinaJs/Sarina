@@ -23,7 +23,7 @@ import { ScopeNotFoundError } from "./../errors/scope-not-found.error";
 import { CyclicDependencyDetectedForProviderError } from "./../errors/cyclic-dependency-detected-for-provider.error";
 
 export const INJECTOR_PROVIDER_TOKEN = new StaticToken({
-	description: "INJECTOR_PROVIDER_TOKEN",
+	description: "Injector provider token",
 	multiple: false
 });
 

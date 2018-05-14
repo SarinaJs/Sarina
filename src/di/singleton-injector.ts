@@ -7,8 +7,8 @@ import { ScopeDecoratorFactory } from "./provider";
 import { Container } from "./container";
 import { Injector } from "./injector";
 
-export const SINGLETON_INJECTOR_SCOPE: Token = new StaticToken({
-  description: "SINGLETON_INJECTOR"
+export const SINGLETON_INJECTOR_TOKEN: Token = new StaticToken({
+  description: "Singleton injector token"
 });
 
 export class SingletonInjector extends Injector {
@@ -17,10 +17,10 @@ export class SingletonInjector extends Injector {
   }
 
   public getScope(): Token {
-    return SINGLETON_INJECTOR_SCOPE;
+    return SINGLETON_INJECTOR_TOKEN;
   }
 }
 
 export const Singleton: () => TypeDecorator = makeTypeDecoratorFactory([
-  (...args: any[]) => ScopeDecoratorFactory(SINGLETON_INJECTOR_SCOPE)
+  (...args: any[]) => ScopeDecoratorFactory(SINGLETON_INJECTOR_TOKEN)
 ]);

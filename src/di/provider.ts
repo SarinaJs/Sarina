@@ -10,7 +10,6 @@ import {
 import { Token, StaticToken } from "./token";
 import { Type } from "./../type";
 import { loggerFactory } from "./../core-logger";
-import { SINGLETON_INJECTOR_SCOPE } from "./singleton-injector";
 import { InvalidUsageOfInjectAnnotation } from "./../errors/invalid-usage-of-inject-annotation.error"
 
 ////////////////////////////////////////////////////////////////////////////////////////
