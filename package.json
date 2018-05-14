@@ -49,6 +49,6 @@
 	"scripts": {
 		"tsc": "./node_modules/typescript/bin/tsc",
 		"build": "tsc",
-		"test": "mocha --compilers ts:ts-node/register -R spec test/**/**.spec.ts",
+		"test": "mocha --compilers ts:ts-node/register -R spec test/application.spec.ts"
 	}
 }
