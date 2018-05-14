@@ -1,54 +1,59 @@
 {
-	"name": "@sarina/core",
-	"version": "1.0.0",
-	"description": "Sarina is a minimal and flexible NodeJs framework that lets you write modern, fast and easy use applications.",
-	"repository": {
-		"type": "git",
-		"url": "https://github.com/SarinaJs/Sarina"
-	},
-	"author": "Mohammad Parvareshi Hamrah",
-	"license": "MIT",
-	"keywords": [
-		"nodejs",
-		"javascirpt",
-		"framework",
-		"modular",
-		"di"
-	],
-	"contributors": [
-		"Mohammad Parvareshi Hamrah <javadparvaresh@gmail.com>"
-	],
-	"homepage": "https://sarinajs.github.io/",
-	"bugs": {
-		"email": "issues@sarinajs.com",
-		"url": "https://github.com/SarinaJs/Sarina/issues"
-	},
-	"engines": {
-		"node": "^8.0.0",
-		"npm": "^5.0.0"
-	},
-	"main": "lib/index.js",
-	"types": "index.d.ts",
-	"files": [
-		"lib"
-	],
-	"dependencies": {
-		"reflect-metadata": "latest"
-	},
-	"devDependencies": {
-		"@types/chai": "^4.1.3",
-		"@types/mocha": "^5.2.0",
-		"@types/node": "latest",
-		"chai": "^4.1.2",
-		"mocha": "^5.1.1",
-		"npm": "latest",
-		"ts-node": "^6.0.3",
-		"tslint": "latest",
-		"typescript": "latest"
-	},
-	"scripts": {
-		"tsc": "./node_modules/typescript/bin/tsc",
-		"build": "tsc",
-		"test": "mocha --compilers ts:ts-node/register -R spec test/application.spec.ts"
-	}
+  "name": "@sarina/core",
+  "version": "1.0.0",
+  "description": "Sarina is a minimal and flexible NodeJs framework that lets you write modern, fast and easy use applications.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SarinaJs/Sarina.git"
+  },
+  "author": "Mohammad Parvareshi Hamrah",
+  "license": "MIT",
+  "keywords": [
+    "nodejs",
+    "javascirpt",
+    "framework",
+    "modular",
+    "di"
+  ],
+  "contributors": [
+    "Mohammad Parvareshi Hamrah <javadparvaresh@gmail.com>"
+  ],
+  "homepage": "https://sarinajs.github.io/",
+  "bugs": {
+    "url": "https://github.com/SarinaJs/Sarina/issues",
+    "email": "issues@sarinajs.com"
+  },
+  "engines": {
+    "node": "latest",
+    "npm": "latest"
+  },
+  "main": "lib/index.js",
+  "types": "index.d.ts",
+  "files": [
+    "lib"
+  ],
+  "dependencies": {
+    "reflect-metadata": "latest"
+  },
+  "devDependencies": {
+    "@types/chai": "latest",
+    "@types/mocha": "latest",
+    "@types/node": "latest",
+    "chai": "latest",
+    "mocha": "latest",
+    "npm": "latest",
+    "ts-node": "latest",
+    "tslint": "latest",
+    "typescript": "latest"
+  },
+  "scripts": {
+    "tsc": "./node_modules/typescript/bin/tsc",
+    "build": "tsc",
+    "test": "mocha --compilers ts:ts-node/register -R spec test/application.spec.ts"
+  },
+  "directories": {
+    "example": "examples",
+    "lib": "lib",
+    "test": "test"
+  }
 }
