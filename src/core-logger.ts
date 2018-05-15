@@ -7,6 +7,7 @@ const FgGreen = "\x1b[32m";
 const FgYellow = "\x1b[33m";
 const FgCyan = "\x1b[36m";
 const FgWhite = "\x1b[37m";
+const FgGray = "\x1b[90m";
 
 let defaultLogLevels: string[] = ["INFO", "WARN", "ERROR"];
 let defaultNamespaces: string[] = ["ALL"];
@@ -66,9 +67,10 @@ class ConsoleLogger implements Logger {
 
 	public debug: (...args: any[]) => void = this.makeLogger(
 		console.debug,
-		"DEBUG"
+		"DEBUG",
+		FgGray
 	);
-	public log: (...args: any[]) => void = this.makeLogger(console.debug, "DEBUG");
+	public log: (...args: any[]) => void = this.makeLogger(console.debug, "DEBUG", FgGray);
 	public error: (...args: any[]) => void = this.makeLogger(
 		console.error,
 		"ERROR",
